@@ -1,0 +1,70 @@
+version: '3'
+services:
+  n1:
+    container_name: "n1"
+    hostname: "n1"
+    image: consul
+    environment:
+      - "CONSUL_BIND_INTERFACE=eth0"
+    entrypoint:
+      - consul
+      - agent
+      - -server
+      - -data-dir=/tmp/consuldata
+      - -bind={{ GetInterfaceIP "eth0" }}
+      - -node=server-n1
+      - -bootstrap-expect=3
+  n2:
+    container_name: "n2"
+    hostname: "n2"
+    image: consul
+    environment:
+      - "CONSUL_BIND_INTERFACE=eth0"
+    entrypoint:
+      - consul
+      - agent
+      - -server
+      - -data-dir=/tmp/consuldata
+      - -bind={{ GetInterfaceIP "eth0" }}
+      - -node=server-n2
+      - -join=n1
+    depends_on:
+      - n1
+  n3:
+    container_name: "n3"
+    hostname: "n3"
+    image: consul
+    environment:
+      - "CONSUL_BIND_INTERFACE=eth0"
+    entrypoint:
+      - consul
+      - agent
+      - -server
+      - -data-dir=/tmp/consuldata
+      - -bind={{ GetInterfaceIP "eth0" }}
+      - -node=server-n3
+      - -join=n1
+    depends_on:
+      - n1
+  ui:
+    container_name: "ui"
+    hostname: "ui"
+    image: consul
+    environment:
+      - "CONSUL_BIND_INTERFACE=eth0"
+      - "CONSUL_HTTP_ADDR=0.0.0.0"
+    entrypoint:
+      - consul
+      - agent
+      - -server
+      - -data-dir=/tmp/consuldata
+      - -bind={{ GetInterfaceIP "eth0" }}
+      - -node=server-ui
+      - -client=0.0.0.0
+      - -join=n1
+      - -ui
+    depends_on:
+      - n1
+    ports:
+      - "8500:8500"
+      - "8600:8600"
